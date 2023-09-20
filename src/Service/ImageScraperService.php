@@ -17,9 +17,13 @@ class ImageScraperService
         $this->cssConverter =  $cssConverter;
     }
 
-    public function scrapeImagesFromUrl(string $url): array
+    public function scrapeImagesFromUrl(string $url): array | false
     {
-        $response = $this->client->get($url);
+        try {
+            $response = $this->client->get($url);
+        } catch (\Exception $e) {
+            return false;
+        }
 
         $htmlContent = $response->getBody()->getContents();
 
@@ -33,7 +37,8 @@ class ImageScraperService
             $src = $image->getAttribute('src');
             if (empty($src) || $src === '') continue;
 
-            $imageData = file_get_contents($src);
+            $imageData = @file_get_contents($src);
+            if (!$imageData) continue;
             $size = empty($imageData) ? null : strlen($imageData);
 
             $imageUrls[] = [
